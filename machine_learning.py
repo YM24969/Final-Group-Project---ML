@@ -199,3 +199,36 @@ print(X_scaled)
 
 # Split the data into training and test sets (70% train, 30% test)
 X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.3, random_state=42)
+
+##4. Feature Selection
+
+#Let’s apply 'Recursive Feature Elimination (RFE)' using a "Logistic Regression" model to select the most important features.
+
+#Using RFE (Recursive Feature Elimination) for feature selection
+model = LogisticRegression(max_iter=10000)
+selector = RFE(model, n_features_to_select=10)  # Select top 10 features
+X_train_selected = selector.fit_transform(X_train, y_train)
+X_test_selected = selector.transform(X_test)
+
+# Get the selected features
+selected_columns = df.columns[selector.support_]
+print(f"Selected Features: {selected_columns}")
+
+##5. Model Training and Evaluation
+
+#Now we will train different models and evaluate them. We’ll start with Logistic Regression, Random Forest, and Support Vector Machine (SVM).
+
+##a. Logistic Regression
+
+# Train Logistic Regression
+log_reg = LogisticRegression(max_iter=10000)
+log_reg.fit(X_train_selected, y_train)
+
+# Make predictions
+y_pred_log_reg = log_reg.predict(X_test_selected)
+
+# Evaluate the model
+print("Logistic Regression Performance:")
+print(f"Accuracy: {accuracy_score(y_test, y_pred_log_reg):.4f}")
+print("Confusion Matrix:\n", confusion_matrix(y_test, y_pred_log_reg))
+print("Classification Report:\n", classification_report(y_test, y_pred_log_reg))
