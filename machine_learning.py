@@ -218,7 +218,7 @@ print(f"Selected Features: {selected_columns}")
 
 #Now we will train different models and evaluate them. We’ll start with Logistic Regression, Random Forest, and Support Vector Machine (SVM).
 
-##a. Logistic Regression
+#a. Logistic Regression
 
 # Train Logistic Regression
 log_reg = LogisticRegression(max_iter=10000)
@@ -232,3 +232,18 @@ print("Logistic Regression Performance:")
 print(f"Accuracy: {accuracy_score(y_test, y_pred_log_reg):.4f}")
 print("Confusion Matrix:\n", confusion_matrix(y_test, y_pred_log_reg))
 print("Classification Report:\n", classification_report(y_test, y_pred_log_reg))
+
+#b. Random Forest Classifier
+
+# Train Random Forest Classifier
+rf_model = RandomForestClassifier(n_estimators=100, random_state=42)
+rf_model.fit(X_train_selected, y_train)
+
+# Make predictions
+y_pred_rf = rf_model.predict(X_test_selected)
+
+# Evaluate the model
+print("Random Forest Classifier Performance:")
+print(f"Accuracy: {accuracy_score(y_test, y_pred_rf):.4f}")
+print("Confusion Matrix:\n", confusion_matrix(y_test, y_pred_rf))
+print("Classification Report:\n", classification_report(y_test, y_pred_rf))
