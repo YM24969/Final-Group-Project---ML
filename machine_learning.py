@@ -168,6 +168,13 @@ from sklearn.metrics import roc_curve, auc
 # Load the dataset
 data = load_breast_cancer()
 df = pd.DataFrame(data.data, columns=data.feature_names)
+
+####This is the larger dataset we have used to test out our model 
+#df = pd.read_csv(r"C:\Users\moyan\OneDrive\Documents\GitHub\Group-Project-Lesson-7\Final Project\output.csv")
+#df.rename(columns={"diagnosis":"target"}, inplace=True)
+#df.columns = df.columns.str.replace('_', ' ')
+#print(df)
+
 y = data.target  # Target variable (Malignant=1, Benign=0)
 
 # Display the first few rows of the dataset
@@ -244,6 +251,10 @@ plt.figure(figsize=(12, 6))
 # Extract 'mean radius' values for benign (0) and malignant (1)
 benign_data = df.loc[y == 0, 'mean radius']
 malignant_data = df.loc[y == 1, 'mean radius']
+
+#### Use to run the Output larger dataset 
+#benign_data = df.loc[y == 0, 'radius mean']
+#malignant_data = df.loc[y == 1, 'radius mean']
 
 # Create boxplot for 'mean radius' grouped by diagnosis (0: Benign, 1: Malignant)
 plt.boxplot([benign_data, malignant_data], labels=['Benign (0)', 'Malignant (1)'])
