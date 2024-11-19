@@ -294,34 +294,6 @@ print(X_scaled)
 # Split the data into training and test sets (70% train, 30% test)
 X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.3, random_state=42)
 
-
-##3. Preprocessing the Data
-
-#a. Handling Missing Data
-
-#The dataset should not contain missing values, but we will check for completeness.
-
-# Check for missing values
-print(df.isnull().sum())
-
-#b. Feature Scaling
-
-#It’s good practice to 'standardize' the features, especially since we are using models like Logistic Regression or SVM.
-
-# Standardizing the features
-scaler = StandardScaler()
-X_scaled = scaler.fit_transform(df)
-
-# View
-print(X_scaled)
-
-#c. Train-Test Split
-
-#We will split the dataset into training and testing sets to evaluate the model’s performance.
-
-# Split the data into training and test sets (70% train, 30% test)
-X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.3, random_state=42)
-
 ##4. Feature Selection
 
 #Let’s apply 'Recursive Feature Elimination (RFE)' using a "Logistic Regression" model to select the most important features.
