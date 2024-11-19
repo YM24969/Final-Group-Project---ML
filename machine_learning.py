@@ -173,6 +173,117 @@ y = data.target  # Target variable (Malignant=1, Benign=0)
 # Display the first few rows of the dataset
 df.head()
 
+##2. Exploratory Data Analysis (EDA) and Visualizations
+
+#Visualize the data to understand the distribution of the target variable and the features.
+
+# A. Visualizing the distribution of the target variable
+# Importing matplotlib
+import matplotlib.pyplot as plt
+
+# Count the number of benign and malignant cases
+benign = sum(y == 0)
+malignant = sum(y == 1)
+
+# Plotting the distribution with Matplotlib
+plt.figure(figsize=(6, 4))
+plt.bar(['Benign', 'Malignant'], [benign, malignant], color=['blue', 'red'])
+
+# Adding title and labels
+plt.title('Distribution of Diagnosis (Malignant vs Benign)')
+plt.xlabel('Diagnosis (0 = Benign, 1 = Malignant)')
+plt.ylabel('Count')
+
+# Display the plot
+plt.show()
+
+#B. Correlation Heatmap
+
+# A heatmap of feature correlations helps identify multicollinearity (i.e., highly correlated features).
+
+# Correlation heatmap to identify relationships between features
+import matplotlib.pyplot as plt
+import numpy as np
+
+# Calculate the correlation matrix
+corr_matrix = df.corr()
+
+# Create a figure with a specified size
+fig, ax = plt.subplots(figsize=(12, 8))
+
+# Plotting the correlation matrix using imshow (heatmap-like effect)
+cax = ax.matshow(corr_matrix, cmap='coolwarm')
+
+# Add a colorbar for the heatmap
+fig.colorbar(cax)
+
+# Add labels to the axes
+ax.set_xticks(np.arange(len(corr_matrix.columns)))
+ax.set_yticks(np.arange(len(corr_matrix.columns)))
+ax.set_xticklabels(corr_matrix.columns, rotation=90)
+ax.set_yticklabels(corr_matrix.columns)
+
+# Add title
+ax.set_title('Feature Correlation Heatmap')
+
+# Display the plot
+plt.show()
+
+#C. Distribution of Key Features
+
+#It's important to check the distribution of some key features like `mean radius`, `mean texture`, etc.
+
+# Plotting histograms of key features
+df[['mean radius', 'mean texture', 'mean perimeter', 'mean area']].hist(bins=20, figsize=(12, 8))
+plt.tight_layout()
+plt.show()
+
+#D. Create a figure with a specified size - purpose: Using Boxplots to detect the Outliers
+plt.figure(figsize=(12, 6))
+
+# Extract 'mean radius' values for benign (0) and malignant (1)
+benign_data = df.loc[y == 0, 'mean radius']
+malignant_data = df.loc[y == 1, 'mean radius']
+
+# Create boxplot for 'mean radius' grouped by diagnosis (0: Benign, 1: Malignant)
+plt.boxplot([benign_data, malignant_data], labels=['Benign (0)', 'Malignant (1)'])
+
+# Add title and labels
+plt.title('Boxplot of Mean Radius by Diagnosis')
+plt.xlabel('Diagnosis')
+plt.ylabel('Mean Radius')
+
+# Display the plot
+plt.show()
+
+##3. Preprocessing the Data
+
+#a. Handling Missing Data
+
+#The dataset should not contain missing values, but we will check for completeness.
+
+# Check for missing values
+print(df.isnull().sum())
+
+#b. Feature Scaling
+
+#It’s good practice to 'standardize' the features, especially since we are using models like Logistic Regression or SVM.
+
+# Standardizing the features
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(df)
+
+# View
+print(X_scaled)
+
+#c. Train-Test Split
+
+#We will split the dataset into training and testing sets to evaluate the model’s performance.
+
+# Split the data into training and test sets (70% train, 30% test)
+X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.3, random_state=42)
+
+
 ##3. Preprocessing the Data
 
 #a. Handling Missing Data
