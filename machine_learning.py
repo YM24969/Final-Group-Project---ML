@@ -341,3 +341,55 @@ print("Random Forest Classifier Performance:")
 print(f"Accuracy: {accuracy_score(y_test, y_pred_rf):.4f}")
 print("Confusion Matrix:\n", confusion_matrix(y_test, y_pred_rf))
 print("Classification Report:\n", classification_report(y_test, y_pred_rf))
+
+#c. Support Vector Machine (SVM)
+
+# Train Support Vector Machine (SVM)
+svm_model = SVC(kernel='linear', random_state=42)
+svm_model.fit(X_train_selected, y_train)
+
+# Make predictions
+y_pred_svm = svm_model.predict(X_test_selected)
+
+# Evaluate the model
+print("Support Vector Machine Performance:")
+print(f"Accuracy: {accuracy_score(y_test, y_pred_svm):.4f}")
+print("Confusion Matrix:\n", confusion_matrix(y_test, y_pred_svm))
+print("Classification Report:\n", classification_report(y_test, y_pred_svm))
+
+from sklearn.ensemble import RandomForestClassifier
+
+# Function to plot ROC curve
+def plot_roc_curve(fpr, tpr, label=None):
+    plt.plot(fpr, tpr, linewidth=2, label=label)
+    plt.plot([0, 1], [0, 1], linestyle='--', linewidth=2, color='gray')  # Diagonal line (no discrimination)
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.05])
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.title('Receiver Operating Characteristic (ROC) Curve')
+    plt.legend(loc='lower right')
+
+# Logistic Regression ROC Curve
+fpr_log_reg, tpr_log_reg, _ = roc_curve(y_test, log_reg.predict_proba(X_test_selected)[:, 1])
+plot_roc_curve(fpr_log_reg, tpr_log_reg, label="Logistic Regression")
+
+# Random Forest ROC Curve
+fpr_rf, tpr_rf, _ = roc_curve(y_test, rf_model.predict_proba(X_test_selected)[:, 1])
+plot_roc_curve(fpr_rf, tpr_rf, label="Random Forest")
+
+# SVM ROC Curve
+fpr_svm, tpr_svm, _ = roc_curve(y_test, svm_model.predict_proba(X_test_selected)[:, 1])
+plot_roc_curve(fpr_svm, tpr_svm, label="SVM")
+
+# Show plot
+plt.show()
+
+# Calculate AUC (Area Under the Curve)
+auc_log_reg = auc(fpr_log_reg, tpr_log_reg)
+auc_rf = auc(fpr_rf, tpr_rf)
+auc_svm = auc(fpr_svm, tpr_svm)
+
+print(f"AUC (Logistic Regression): {auc_log_reg:.4f}")
+print(f"AUC (Random Forest): {auc_rf:.4f}")
+print(f"AUC (SVM): {auc_svm:.4f}")
