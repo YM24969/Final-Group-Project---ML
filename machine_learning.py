@@ -164,10 +164,12 @@ from sklearn.svm import SVC
 from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
 from sklearn.feature_selection import RFE
 from sklearn.metrics import roc_curve, auc
+from sklearn.inspection import PartialDependenceDisplay
 
 # Load the dataset
 data = load_breast_cancer()
 df = pd.DataFrame(data.data, columns=data.feature_names)
+print(df.iloc[:, :5])
 
 ####This is the larger dataset we have used to test out our model 
 #df = pd.read_csv(r"C:\Users\moyan\OneDrive\Documents\GitHub\Group-Project-Lesson-7\Final Project\output.csv")
@@ -270,7 +272,6 @@ plt.show()
 ##3. Preprocessing the Data
 
 #a. Handling Missing Data
-
 #The dataset should not contain missing values, but we will check for completeness.
 
 # Check for missing values
@@ -345,7 +346,8 @@ print("Classification Report:\n", classification_report(y_test, y_pred_rf))
 #c. Support Vector Machine (SVM)
 
 # Train Support Vector Machine (SVM)
-svm_model = SVC(kernel='linear', random_state=42)
+svm_model = SVC(kernel='linear', random_state=42, probability = True)
+
 svm_model.fit(X_train_selected, y_train)
 
 # Make predictions
@@ -357,7 +359,21 @@ print(f"Accuracy: {accuracy_score(y_test, y_pred_svm):.4f}")
 print("Confusion Matrix:\n", confusion_matrix(y_test, y_pred_svm))
 print("Classification Report:\n", classification_report(y_test, y_pred_svm))
 
-from sklearn.ensemble import RandomForestClassifier
+##Partial Depedence Plots 
+#To determine potential Polynomial Features 
+features = [0,1,2,3,4,5,6,7,8,9]
+display=PartialDependenceDisplay.from_estimator(rf_model, X_train_selected, features, kind= 'average', grid_resolution=50)
+
+display.plot()
+plt.suptitle("Random Forest Partial Dependence Plots")
+plt.subplots_adjust(top=0.9)
+plt.show()
+
+
+
+
+
+
 
 # Function to plot ROC curve
 def plot_roc_curve(fpr, tpr, label=None):
