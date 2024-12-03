@@ -154,9 +154,10 @@ import os
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import tensorflow
 
 from sklearn.datasets import load_breast_cancer
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, KFold
 from sklearn.preprocessing import StandardScaler
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
@@ -165,19 +166,22 @@ from sklearn.metrics import accuracy_score, confusion_matrix, classification_rep
 from sklearn.feature_selection import RFE
 from sklearn.metrics import roc_curve, auc
 from sklearn.inspection import PartialDependenceDisplay
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, Input
+import xgboost as xgb
 
 # Load the dataset
 data = load_breast_cancer()
 df = pd.DataFrame(data.data, columns=data.feature_names)
-print(df.iloc[:, :5])
 
 ####This is the larger dataset we have used to test out our model 
 #df = pd.read_csv(r"C:\Users\moyan\OneDrive\Documents\GitHub\Group-Project-Lesson-7\Final Project\output.csv")
 #df.rename(columns={"diagnosis":"target"}, inplace=True)
 #df.columns = df.columns.str.replace('_', ' ')
-#print(df)
+#print(df.columns)
 
 y = data.target  # Target variable (Malignant=1, Benign=0)
+X = df
 
 # Display the first few rows of the dataset
 df.head()
@@ -277,23 +281,21 @@ plt.show()
 # Check for missing values
 print(df.isnull().sum())
 
-#b. Feature Scaling
+#b. Train-Test Split
+
+#We will split the dataset into training and testing sets to evaluate the model’s performance.
+
+# Split the data into training and test sets (70% train, 30% test)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+
+#c. Feature Scaling
 
 #It’s good practice to 'standardize' the features, especially since we are using models like Logistic Regression or SVM.
 
 # Standardizing the features
 scaler = StandardScaler()
-X_scaled = scaler.fit_transform(df)
-
-# View
-print(X_scaled)
-
-#c. Train-Test Split
-
-#We will split the dataset into training and testing sets to evaluate the model’s performance.
-
-# Split the data into training and test sets (70% train, 30% test)
-X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.3, random_state=42)
+X_train_scaled = scaler.fit_transform(X_train)
+X_test_scaled = scaler.transform(X_test)
 
 ##4. Feature Selection
 
@@ -302,8 +304,11 @@ X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.3, 
 #Using RFE (Recursive Feature Elimination) for feature selection
 model = LogisticRegression(max_iter=10000)
 selector = RFE(model, n_features_to_select=10)  # Select top 10 features
-X_train_selected = selector.fit_transform(X_train, y_train)
-X_test_selected = selector.transform(X_test)
+X_train_selected = selector.fit_transform(X_train_scaled, y_train)
+X_test_selected = selector.transform(X_test_scaled)
+
+print(f"Shape of X_train_selected: {X_train_selected.shape}")
+print(f"Shape of X_test_selected: {X_test_selected.shape}")
 
 # Get the selected features
 selected_columns = df.columns[selector.support_]
@@ -347,9 +352,9 @@ print("Classification Report:\n", classification_report(y_test, y_pred_rf))
 
 # Train Support Vector Machine (SVM)
 svm_model = SVC(kernel='linear', random_state=42, probability = True)
-
+print(f"Shape of X_train_selected Before: {X_train_selected.shape}")
 svm_model.fit(X_train_selected, y_train)
-
+print(f"Shape of X_train_selected After: {X_train_selected.shape}")
 # Make predictions
 y_pred_svm = svm_model.predict(X_test_selected)
 
@@ -358,6 +363,70 @@ print("Support Vector Machine Performance:")
 print(f"Accuracy: {accuracy_score(y_test, y_pred_svm):.4f}")
 print("Confusion Matrix:\n", confusion_matrix(y_test, y_pred_svm))
 print("Classification Report:\n", classification_report(y_test, y_pred_svm))
+
+#Neural Network using Keras(TensorFlow) package. 
+def create_nn_model(shape_size):
+    model = Sequential()
+    model.add(Dense(64, input_shape=(shape_size,), activation='relu'))
+    model.add(Dense(32, activation='relu'))
+    model.add(Dense(1, activation='sigmoid'))
+    model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+    return model
+
+## K-Fold Cross-Validation
+#More accurate way of evaluating (pre-evaluating of model)
+
+kf = KFold(n_splits=5)
+nn_accuracies = []
+
+for train_index, val_index in kf.split(X_train_selected):
+    X_train_kf, X_val_kf = X_train_selected[train_index], X_train_selected[val_index]
+    y_train_kf, y_val_kf = y_train[train_index], y_train[val_index]
+    
+    # Create the neural network model
+    model = create_nn_model(shape_size=X_train_selected.shape[1])
+
+    # Train the model
+    model.fit(X_train_kf, y_train_kf, epochs=10, batch_size=32, verbose=0, validation_split=0.1)
+    
+    # Evaluate the model
+    _, accuracy = model.evaluate(X_val_kf, y_val_kf, verbose=0)
+    nn_accuracies.append(accuracy)
+
+print(f"Neural Network cross-validation accuracy: {np.mean(nn_accuracies)}")
+
+# Evaluate Neural Network on test data
+final_nn_model = create_nn_model(shape_size=X_train_selected.shape[1])
+final_nn_model.fit(X_train_selected, y_train, epochs=10, batch_size=32, verbose=0, validation_split=0.1)
+nn_test_accuracy = final_nn_model.evaluate(X_test_selected, y_test)[1]
+print(f"Neural Network test accuracy: {nn_test_accuracy}")
+
+## For XGBoost
+xgb_accuracies = []
+
+for train_index, val_index in kf.split(X_train_selected):
+    X_train_kf, X_val_kf = X_train_selected[train_index], X_train_selected[val_index]
+    y_train_kf, y_val_kf = y_train[train_index], y_train[val_index]
+    
+    # Create XGBoost model
+    model = xgb.XGBClassifier(use_label_encoder=False, eval_metric='logloss')
+    
+    # Train the model
+    model.fit(X_train_kf, y_train_kf)
+    
+    # Evaluate the model
+    y_pred = model.predict(X_val_kf)
+    accuracy = accuracy_score(y_val_kf, y_pred)
+    xgb_accuracies.append(accuracy)
+
+print(f"XGBoost cross-validation accuracy: {np.mean(xgb_accuracies)}")
+
+# Evaluate XGBoost on test data
+final_xgb_model = xgb.XGBClassifier(use_label_encoder=False, eval_metric='logloss')
+final_xgb_model.fit(X_train_selected, y_train)
+xgb_y_pred = final_xgb_model.predict(X_test_selected)
+xgb_test_accuracy = accuracy_score(y_test, xgb_y_pred)
+print(f"XGBoost test accuracy: {xgb_test_accuracy}")
 
 ##Partial Depedence Plots 
 #To determine potential Polynomial Features 
@@ -368,12 +437,6 @@ display.plot()
 plt.suptitle("Random Forest Partial Dependence Plots")
 plt.subplots_adjust(top=0.9)
 plt.show()
-
-
-
-
-
-
 
 # Function to plot ROC curve
 def plot_roc_curve(fpr, tpr, label=None):
